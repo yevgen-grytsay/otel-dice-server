@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"dice/otel"
 	"log"
 	"net/http"
 )
 
 func main() {
 	ctx := context.Background()
-	shutdown, err := setupOTelSDK(ctx)
+	shutdown, err := otel.SetupOTelSDK(ctx)
 	if err != nil {
 		panic(err)
 	}

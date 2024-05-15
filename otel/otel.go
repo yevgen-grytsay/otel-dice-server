@@ -8,7 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -46,7 +46,7 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTextMapPropagator(prop)
 
 	// Set up trace provider.
-	tracerProvider, err := newTraceProvider()
+	tracerProvider, err := newOtlpTraceProvider(ctx)
 	if err != nil {
 		handleErr(err)
 		return
@@ -73,20 +73,31 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
+func newOtlpTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
+	exp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(otlpmetrichttp_endpoint))
 	if err != nil {
 		return nil, err
 	}
 
-	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
-	)
+	traceProvider := trace.NewTracerProvider(trace.WithBatcher(exp, trace.WithBatchTimeout(time.Second)))
+
 	return traceProvider, nil
 }
+
+// func newTraceProvider() (*trace.TracerProvider, error) {
+// 	traceExporter, err := stdouttrace.New(
+// 		stdouttrace.WithPrettyPrint())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	traceProvider := trace.NewTracerProvider(
+// 		trace.WithBatcher(traceExporter,
+// 			// Default is 5s. Set to 1s for demonstrative purposes.
+// 			trace.WithBatchTimeout(time.Second)),
+// 	)
+// 	return traceProvider, nil
+// }
 
 func newOtlpMetricProvider(ctx context.Context) (*metric.MeterProvider, error) {
 	exp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(otlpmetrichttp_endpoint))
@@ -94,7 +105,7 @@ func newOtlpMetricProvider(ctx context.Context) (*metric.MeterProvider, error) {
 		return nil, err
 	}
 
-	meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(3*time.Second))))
+	meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(10*time.Second))))
 
 	return meterProvider, nil
 }

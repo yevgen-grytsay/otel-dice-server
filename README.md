@@ -1,5 +1,7 @@
 ```sh
 go get go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp
+
+go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
 ```
 
 ```sh

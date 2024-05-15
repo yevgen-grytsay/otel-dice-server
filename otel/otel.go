@@ -3,14 +3,20 @@ package otel
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace"
+)
+
+var (
+	// "https://collector:3030"
+	otlpmetrichttp_endpoint = os.Getenv("OTLPMETRICHTTP_ENDPOINT")
 )
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
@@ -49,7 +55,7 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTracerProvider(tracerProvider)
 
 	// Set up meter provider.
-	meterProvider, err := newMeterProvider()
+	meterProvider, err := newOtlpMetricProvider(ctx)
 	if err != nil {
 		handleErr(err)
 		return
@@ -82,16 +88,27 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 	return traceProvider, nil
 }
 
-func newMeterProvider() (*metric.MeterProvider, error) {
-	metricExporter, err := stdoutmetric.New()
+func newOtlpMetricProvider(ctx context.Context) (*metric.MeterProvider, error) {
+	exp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(otlpmetrichttp_endpoint))
 	if err != nil {
 		return nil, err
 	}
 
-	meterProvider := metric.NewMeterProvider(
-		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// Default is 1m. Set to 3s for demonstrative purposes.
-			metric.WithInterval(3*time.Second))),
-	)
+	meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(3*time.Second))))
+
 	return meterProvider, nil
 }
+
+// func newMeterProvider() (*metric.MeterProvider, error) {
+// 	metricExporter, err := stdoutmetric.New()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	meterProvider := metric.NewMeterProvider(
+// 		metric.WithReader(metric.NewPeriodicReader(metricExporter,
+// 			// Default is 1m. Set to 3s for demonstrative purposes.
+// 			metric.WithInterval(3*time.Second))),
+// 	)
+// 	return meterProvider, nil
+// }

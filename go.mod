@@ -1,4 +1,4 @@
-module dice
+module yevgen-grytsay/dice
 
 go 1.22.0
 

@@ -8,6 +8,10 @@ go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
 kubectl run dice --image=yevhenhrytsai/dice:v1.0.0
 ```
 
+## Examples
+- [opentelemetry-go-contrib | server](https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/net/http/otelhttp/example/server/server.go)
+
+
 ## Collector
 Лог TracesExporter з'являється одразу піся запиту до `/rolldice`.
 
@@ -31,3 +35,4 @@ kubectl run dice --image=yevhenhrytsai/dice:v1.0.0
 
 ## Resources
 - [otel/exporters/otlp/otlpmetric/otlpmetrichttp](https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp)
+- [Instrumenting a Go application for Prometheus](https://prometheus.io/docs/guides/go-application/)

@@ -7,6 +7,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o dice
 
 FROM scratch
 ENV OTLPMETRICHTTP_ENDPOINT="http://collector:3030"
+ENV OTEL_DICE_ENV="prod"
 WORKDIR /
 COPY --from=builder /usr/src/app/dice .
 COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

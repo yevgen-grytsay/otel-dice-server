@@ -9,13 +9,15 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
-	tracer  = otel.Tracer("rolldice")
 	meter   = otel.Meter("rolldice")
 	rollCnt metric.Int64Counter
+	uk      = attribute.Key("username")
 )
 
 func init() {
@@ -29,7 +31,11 @@ func init() {
 }
 
 func rolldice(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "roll")
+	ctx := r.Context()
+	span := trace.SpanFromContext(ctx)
+	bag := baggage.FromContext(ctx)
+	span.AddEvent("handling this...", trace.WithAttributes(uk.String(bag.Member("username").Value())))
+
 	defer span.End()
 
 	roll := 1 + rand.Intn(6)

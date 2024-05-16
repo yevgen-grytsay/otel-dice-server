@@ -17,7 +17,7 @@ kubectl run dice --image=yevhenhrytsai/dice:v1.0.0
 
 Лог MetricsExporter з'являється з інтервалом, вказаним в налаштуваннях `metric.MeterProvider`.
 ```go
-	meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(10*time.Second))))
+meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(10*time.Second))))
 ```
 ```
 2024-05-15T16:08:45.059Z        info    TracesExporter  {"kind": "exporter", "data_type": "traces", "name": "debug", "resource spans": 1, "spans": 1}

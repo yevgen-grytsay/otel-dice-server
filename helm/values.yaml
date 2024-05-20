@@ -11,6 +11,7 @@ image:
   tag: "v1.0.6"
 
 service:
+  name: otel-dice-server
   type: ClusterIP
   port: 8080
 

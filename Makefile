@@ -1,4 +1,4 @@
-IMAGE_NAME=yevhenhrytsai/dice:v1.0.2
+IMAGE_NAME=yevhenhrytsai/dice:v1.0.3
 
 
 compile:

@@ -75,7 +75,7 @@ func SetupOTelSDK(ctx context.Context, env OtelEnv) (shutdown func(context.Conte
 	case OtelEnvDev:
 		tracerProvider, err = newTraceProvider()
 	case OtelEnvProd:
-		tracerProvider, err = newOtlpTraceProvider(ctx)
+		tracerProvider, err = newOtlpTraceProvider(ctx, otlpmetrichttp_endpoint)
 	default:
 		log.Fatal("Unknown env")
 	}
@@ -94,7 +94,7 @@ func SetupOTelSDK(ctx context.Context, env OtelEnv) (shutdown func(context.Conte
 	case OtelEnvDev:
 		meterProvider, err = newMeterProvider()
 	case OtelEnvProd:
-		meterProvider, err = newOtlpMetricProvider(ctx)
+		meterProvider, err = newOtlpMetricProvider(ctx, otlpmetrichttp_endpoint)
 	default:
 		log.Fatal("Unknown env")
 	}
@@ -115,8 +115,8 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newOtlpTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
-	exp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(otlpmetrichttp_endpoint))
+func newOtlpTraceProvider(ctx context.Context, endpoint string) (*trace.TracerProvider, error) {
+	exp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(endpoint))
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +141,8 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 	return traceProvider, nil
 }
 
-func newOtlpMetricProvider(ctx context.Context) (*metric.MeterProvider, error) {
-	exp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(otlpmetrichttp_endpoint))
+func newOtlpMetricProvider(ctx context.Context, endpoint string) (*metric.MeterProvider, error) {
+	exp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(endpoint))
 	if err != nil {
 		return nil, err
 	}

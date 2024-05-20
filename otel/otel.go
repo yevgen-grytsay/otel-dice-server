@@ -168,7 +168,22 @@ func newOtlpMetricProvider(ctx context.Context, endpoint string) (*metric.MeterP
 		return nil, err
 	}
 
-	meterProvider := metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(10*time.Second))))
+	meterRes, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(OTEL_SERVICE_NAME),
+			// semconv.ServiceVersion(appVersion),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	meterProvider := metric.NewMeterProvider(
+		metric.WithReader(metric.NewPeriodicReader(exp, metric.WithInterval(10*time.Second))),
+		metric.WithResource(meterRes),
+	)
 
 	return meterProvider, nil
 }

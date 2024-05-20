@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,12 @@ import (
 
 var appVersion = "unknown"
 var appEnv = os.Getenv("OTEL_DICE_ENV")
+
+var livenessHandler = func(w http.ResponseWriter, r *http.Request) {
+	if _, err := io.WriteString(w, "OK"); err != nil {
+		log.Printf("Write failed: %v\n", err)
+	}
+}
 
 func main() {
 	log.Printf("Version: %s", appVersion)
@@ -26,6 +33,8 @@ func main() {
 	otelHandler := otelhttp.NewHandler(http.HandlerFunc(rolldice), "Hello")
 
 	http.Handle("/rolldice", otelHandler)
+
+	http.HandleFunc("/liveness", livenessHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

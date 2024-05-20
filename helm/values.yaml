@@ -29,11 +29,11 @@ resources:
 
 livenessProbe:
   httpGet:
-    path: /
+    path: /liveness
     port: 8080
 readinessProbe:
   httpGet:
-    path: /
+    path: /rolldice
     port: 8080
 
 autoscaling:

@@ -8,6 +8,18 @@ go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
 kubectl run dice --image=yevhenhrytsai/dice:v1.0.0
 ```
 
+## Debug HTTP
+```sh
+kubectl run curl --image=radial/busyboxplus:curl -i --tty --rm -n kbot
+```
+
+### Prometheus
+```sh
+export POD_NAME=$(kubectl get pods --namespace kbot -l "app.kubernetes.io/name=prometheus,app.kubernetes.io/instance=prometheus" -o jsonpath="{.items[0].metadata.name}")
+
+kubectl --namespace kbot port-forward $POD_NAME 9090
+```
+
 ## Examples
 - [opentelemetry-go-contrib | server](https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/net/http/otelhttp/example/server/server.go)
 

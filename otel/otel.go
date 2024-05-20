@@ -14,7 +14,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
 type OtelEnv string
@@ -22,6 +24,10 @@ type OtelEnv string
 const (
 	OtelEnvProd OtelEnv = "prod"
 	OtelEnvDev  OtelEnv = "dev"
+)
+
+const (
+	OTEL_SERVICE_NAME = "RollDiceService"
 )
 
 var (
@@ -70,7 +76,7 @@ func SetupOTelSDK(ctx context.Context, env OtelEnv) (shutdown func(context.Conte
 	//
 	// Set up trace provider.
 	//
-	var tracerProvider *trace.TracerProvider
+	var tracerProvider *sdktrace.TracerProvider
 	switch env {
 	case OtelEnvDev:
 		tracerProvider, err = newTraceProvider()
@@ -115,28 +121,43 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newOtlpTraceProvider(ctx context.Context, endpoint string) (*trace.TracerProvider, error) {
+func newOtlpTraceProvider(ctx context.Context, endpoint string) (*sdktrace.TracerProvider, error) {
 	exp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(endpoint))
 	if err != nil {
 		return nil, err
 	}
 
-	traceProvider := trace.NewTracerProvider(trace.WithBatcher(exp, trace.WithBatchTimeout(time.Second)))
+	traceRes, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(OTEL_SERVICE_NAME),
+			// semconv.ServiceVersion(appVersion),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	traceProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exp, sdktrace.WithBatchTimeout(time.Second)),
+		sdktrace.WithResource(traceRes),
+	)
 
 	return traceProvider, nil
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
+func newTraceProvider() (*sdktrace.TracerProvider, error) {
 	traceExporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, err
 	}
 
-	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
+	traceProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(traceExporter,
 			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
+			sdktrace.WithBatchTimeout(time.Second)),
 	)
 	return traceProvider, nil
 }
